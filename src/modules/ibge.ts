@@ -1,11 +1,11 @@
 import { getDataJSON, putObject } from './storage';
+import { CacheData } from './types';
 
 const IBGE = 'ibge';
 const API = 'https://servicodados.ibge.gov.br/api';
 
 export async function getLocals(path: string, key: string) {
   const url = `${API}/v1/localidades/${path}`;
-  console.log(url, key);
   return getDataJSON(key, url);
 }
 
@@ -14,7 +14,6 @@ export async function setLocals(
   path: string,
   key: string,
 ) {
-  console.log(path, key);
   const source = await getLocals(path, key);
   return putObject(env, key, source);
 }
@@ -22,7 +21,6 @@ export async function setLocals(
 export async function setRegionsList(env: Cloudflare.Env) {
   const path = 'regioes?orderBy=nome';
   const target = `${IBGE}/regioes.json`;
-
   return setLocals(env, path, target);
 }
 
@@ -39,14 +37,12 @@ export async function setRegionData(env: Cloudflare.Env, key: string) {
 export async function setRegionStates(env: Cloudflare.Env, key: string) {
   const path = `regioes/${key}/estados?orderBy=nome`;
   const target = `${IBGE}/regioes/${key}/ufs.json`;
-
   return setLocals(env, path, target);
 }
 
 export async function setStatesList(env: Cloudflare.Env) {
   const path = 'estados?orderBy=nome';
   const target = `${IBGE}/ufs.json`;
-
   return setLocals(env, path, target);
 }
 
@@ -62,43 +58,65 @@ export async function setStateData(env: Cloudflare.Env, key: string) {
   return setLocals(env, path, target);
 }
 
-export async function setCitiesList(env: Cloudflare.Env, key: string) {
-  const path = `estados/${key}/municipios?orderBy=nome`;
-  const target = `${IBGE}/ufs/${key}/cidades.json`;
-  const source = await getLocals(path, target);
+export async function setCities(env: Cloudflare.Env) {
+  const path = 'municipios?orderBy=nome';
+  const source = await getLocals(path, `${IBGE}/cidades.json`);
+  const cities = source.data.map(mapCity);
+  const capitals = cities.filter(filterCapital);
 
-  source.data = source.data.map(mapCity);
+  await putObject(env, `${IBGE}/capitais.json`, capitals);
 
-  for (const city of source.data)
+  const grouped = cities.reduce((result: any, city: any) => {
+    const uf = city.uf.sigla;
+
+    if (!result[uf]) result[uf] = [];
+
+    result[uf].push(city);
+
+    return result;
+  }, {} as any);
+
+  for (const uf of Object.keys(grouped)) {
+    const target = `${IBGE}/ufs/${uf}/cidades.json`;
+    const cache: CacheData = {
+      key: target,
+      data: grouped[uf],
+      update: new Date().toJSON(),
+    };
+
+    await putObject(env, target, cache);
+  }
+
+  for (const city of cities) {
     await env.QUEUE.send({
       key: 'city',
-      value: city.id,
+      value: city,
     });
-
-  return putObject(env, target, source);
+  }
 }
 
-export async function setCity(env: Cloudflare.Env, key: string) {
-  const path = `municipios/${key}`;
-  const target = `${IBGE}/cidades/${key}.json`;
-  const source = await getLocals(path, target);
+export async function setCity(env: Cloudflare.Env, city: any) {
+  const target = `${IBGE}/cidades/${city.id}.json`;
+  const cache: CacheData = {
+    key: target,
+    data: city,
+    update: new Date().toJSON(),
+  };
 
-  source.data = mapCity(source.data);
-
-  return putObject(env, target, source);
+  return putObject(env, target, cache);
 }
 
-export async function getDistrictsList(
-  env: Cloudflare.Env,
-  path: string,
-  key: string,
-) {
-  const source = await getLocals(path, key);
+// export async function getDistrictsList(
+//   env: Cloudflare.Env,
+//   path: string,
+//   key: string,
+// ) {
+//   const source = await getLocals(path, key);
 
-  source.data = source.data.map(mapDistrict);
+//   source.data = source.data.map(mapDistrict);
 
-  return putObject(env, key, source);
-}
+//   return putObject(env, key, source);
+// }
 
 // export async function setDistrict(id: string, cache = true) {
 //   const source = await setLocals(
@@ -108,19 +126,6 @@ export async function getDistrictsList(
 //   );
 
 //   if (!source.cache) source.data = mapDistrict(source.data);
-
-//   return cache ? setDataCache(source) : source;
-// }
-
-// export async function getCapitals(cache = true) {
-//   const source = await setLocals(
-//     'municipios?orderBy=nome',
-//     'ibge/capitals/list',
-//     false,
-//   );
-
-//   if (!source.cache)
-//     source.data = source.data.filter(filterCapital).map(mapCity);
 
 //   return cache ? setDataCache(source) : source;
 // }
@@ -210,11 +215,7 @@ function filterCapital(city: any) {
     { uf: 'SP', nome: 'São Paulo' },
     { uf: 'TO', nome: 'Palmas' },
   ];
-  return caps.some(
-    (cap) =>
-      cap.nome === city.nome &&
-      cap.uf === city['regiao-imediata']['regiao-intermediaria'].UF.sigla,
-  );
+  return caps.some((cap) => cap.uf === city.uf.sigla && cap.nome === city.nome);
 }
 
 export async function setGeoData(

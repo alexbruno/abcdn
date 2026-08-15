@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import {
-  setCitiesList,
+  setCities,
   setCity,
   setGeoData,
   setRegionData,
@@ -27,6 +27,8 @@ export default {
       const states = await setStatesList(env);
 
       for (const state of states.data) await setStateData(env, state.sigla);
+
+      await setCities(env);
     } catch (error) {
       console.error('scheduled error', error);
     }
@@ -40,7 +42,6 @@ export default {
         switch (key) {
           case 'uf':
             await setGeoData(env, 'estados', value);
-            await setCitiesList(env, value);
             break;
 
           case 'city':
