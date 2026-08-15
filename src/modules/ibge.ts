@@ -9,27 +9,55 @@ export async function getLocals(path: string, key: string) {
   return getDataJSON(key, url);
 }
 
-export async function setLocals(env: Env, path: string, key: string) {
+export async function setLocals(
+  env: Cloudflare.Env,
+  path: string,
+  key: string,
+) {
   console.log(path, key);
   const source = await getLocals(path, key);
   return putObject(env, key, source);
 }
 
-export async function setRegionsList(env: Env) {
+export async function setRegionsList(env: Cloudflare.Env) {
   const path = 'regioes?orderBy=nome';
   const target = `${IBGE}/regioes.json`;
-  console.log(path, target);
+
   return setLocals(env, path, target);
 }
 
-export async function setRegionData(env: Env, key: string) {
+export async function setRegionData(env: Cloudflare.Env, key: string) {
   const path = `regioes/${key}`;
   const target = `${IBGE}/regioes/${key}.json`;
-  console.log(path, target);
+
+  await setGeoData(env, 'regioes', key);
+  await setRegionStates(env, key);
+
   return setLocals(env, path, target);
 }
 
-export async function setCitiesList(env: Env, path: string) {
+export async function setRegionStates(env: Cloudflare.Env, key: string) {
+  const path = `regioes/${key}/estados?orderBy=nome`;
+  const target = `${IBGE}/regioes/${key}/ufs.json`;
+
+  return setLocals(env, path, target);
+}
+
+export async function setStatesList(env: Cloudflare.Env) {
+  const path = 'estados?orderBy=nome';
+  const target = `${IBGE}/ufs.json`;
+
+  return setLocals(env, path, target);
+}
+
+export async function setStateData(env: Cloudflare.Env, key: string) {
+  const path = `estados/${key}`;
+  const target = `${IBGE}/ufs/${key}.json`;
+
+  return setLocals(env, path, target);
+}
+
+export async function setCitiesList(env: Cloudflare.Env, path: string) {
   const target = `${IBGE}/cities.json`;
   const source = await getLocals(path, target);
 
@@ -38,7 +66,7 @@ export async function setCitiesList(env: Env, path: string) {
   return putObject(env, target, source);
 }
 
-export async function setCity(env: Env, key: string) {
+export async function setCity(env: Cloudflare.Env, key: string) {
   const target = `${IBGE}/cities/${key}.json`;
   const source = await getLocals(`municipios/${key}`, target);
 
@@ -47,7 +75,11 @@ export async function setCity(env: Env, key: string) {
   return putObject(env, target, source);
 }
 
-export async function getDistrictsList(env: Env, path: string, key: string) {
+export async function getDistrictsList(
+  env: Cloudflare.Env,
+  path: string,
+  key: string,
+) {
   const source = await getLocals(path, key);
 
   source.data = source.data.map(mapDistrict);
@@ -172,7 +204,11 @@ function filterCapital(city: any) {
   );
 }
 
-export async function setGeoData(env: Env, level: string, key: string) {
+export async function setGeoData(
+  env: Cloudflare.Env,
+  level: string,
+  key: string,
+) {
   const target = `${IBGE}/geo/${level}/${key}.json`;
   const endpoint = `${API}/v4/malhas/${level}/${key}`;
   const source = await getDataJSON(target, `${endpoint}/metadados`);
