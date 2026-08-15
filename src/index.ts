@@ -39,7 +39,7 @@ export default {
 
         switch (key) {
           case 'uf':
-            await setGeoData(env, 'ufs', value);
+            await setGeoData(env, 'estados', value);
             await setCitiesList(env, value);
             break;
 
