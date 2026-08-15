@@ -1,0 +1,17 @@
+{
+  "name": "abcdn",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "types": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "hono": "^4.13.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260814.1",
+    "prettier": "^3.9.6",
+    "wrangler": "^4.110.0"
+  }
+}
