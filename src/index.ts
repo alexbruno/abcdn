@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import {
+  setCitiesList,
   setGeoData,
   setRegionData,
   setRegionsList,
@@ -44,7 +45,11 @@ export default {
         case 'uf':
           console.log('uf', value);
           await setGeoData(env, 'ufs', value);
+          await setCitiesList(env, value);
           break;
+
+        default:
+          console.log('No queue action for:', key, value);
       }
     }
   },

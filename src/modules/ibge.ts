@@ -57,8 +57,9 @@ export async function setStateData(env: Cloudflare.Env, key: string) {
   return setLocals(env, path, target);
 }
 
-export async function setCitiesList(env: Cloudflare.Env, path: string) {
-  const target = `${IBGE}/cities.json`;
+export async function setCitiesList(env: Cloudflare.Env, key: string) {
+  const path = `estados/${key}/municipios?orderBy=nome`;
+  const target = `${IBGE}/ufs/${key}/cidades.json`;
   const source = await getLocals(path, target);
 
   source.data = source.data.map(mapCity);
