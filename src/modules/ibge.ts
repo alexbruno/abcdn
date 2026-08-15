@@ -60,7 +60,7 @@ export async function setStateData(env: Cloudflare.Env, key: string) {
 
 export async function setCities(env: Cloudflare.Env) {
   const path = 'municipios?orderBy=nome';
-  const source = await getLocals(path, `${IBGE}/cidades.json`);
+  const source = await getLocals(path, 'cidades');
   const cities = source.data.map(mapCity);
   const capitals = cities.filter(filterCapital);
 

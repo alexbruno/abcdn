@@ -51,8 +51,11 @@ export default {
           default:
             console.log('No queue action for:', key, value);
         }
+
+        message.ack();
       } catch (error) {
         console.error('queue error', error);
+        message.retry({ delaySeconds: 5 });
       }
     }
   },
