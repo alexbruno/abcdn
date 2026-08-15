@@ -35,7 +35,7 @@ export default {
   async queue(batch, env, _ctx) {
     for (const message of batch.messages) {
       try {
-        const { key, value } = JSON.parse(message.body as string);
+        const { key, value } = message.body as { key: string; value: string };
 
         switch (key) {
           case 'uf':
