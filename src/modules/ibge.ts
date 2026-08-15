@@ -36,19 +36,19 @@ export async function setRegionData(env: Cloudflare.Env, key: string) {
 
 export async function setRegionStates(env: Cloudflare.Env, key: string) {
   const path = `regioes/${key}/estados?orderBy=nome`;
-  const target = `${IBGE}/regioes/${key}/ufs.json`;
+  const target = `${IBGE}/regioes/${key}/estados.json`;
   return setLocals(env, path, target);
 }
 
 export async function setStatesList(env: Cloudflare.Env) {
   const path = 'estados?orderBy=nome';
-  const target = `${IBGE}/ufs.json`;
+  const target = `${IBGE}/estados.json`;
   return setLocals(env, path, target);
 }
 
 export async function setStateData(env: Cloudflare.Env, key: string) {
   const path = `estados/${key}`;
-  const target = `${IBGE}/ufs/${key}.json`;
+  const target = `${IBGE}/estados/${key}.json`;
 
   await env.QUEUE.send({
     key: 'uf',
@@ -77,7 +77,7 @@ export async function setCities(env: Cloudflare.Env) {
   }, {} as any);
 
   for (const uf of Object.keys(grouped)) {
-    const target = `${IBGE}/ufs/${uf}/cidades.json`;
+    const target = `${IBGE}/estados/${uf}/cidades.json`;
     const cache: CacheData = {
       key: target,
       data: grouped[uf],
