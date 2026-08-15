@@ -28,28 +28,30 @@ export default {
 
       for (const state of states.data) await setStateData(env, state.sigla);
     } catch (error) {
-      console.log('error', error);
+      console.error('scheduled error', error);
     }
   },
 
   async queue(batch, env, _ctx) {
     for (const message of batch.messages) {
-      const { key, value } = JSON.parse(message.body as string);
+      try {
+        const { key, value } = JSON.parse(message.body as string);
 
-      switch (key) {
-        case 'uf':
-          console.log('uf', value);
-          await setGeoData(env, 'ufs', value);
-          await setCitiesList(env, value);
-          break;
+        switch (key) {
+          case 'uf':
+            await setGeoData(env, 'ufs', value);
+            await setCitiesList(env, value);
+            break;
 
-        case 'city':
-          console.log('city', value);
-          await setCity(env, value);
-          break;
+          case 'city':
+            await setCity(env, value);
+            break;
 
-        default:
-          console.log('No queue action for:', key, value);
+          default:
+            console.log('No queue action for:', key, value);
+        }
+      } catch (error) {
+        console.error('queue error', error);
       }
     }
   },
