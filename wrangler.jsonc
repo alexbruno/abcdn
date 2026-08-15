@@ -1,13 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "cloud-cache",
+  "name": "abcdn",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-14",
   "assets": { "directory": "public" },
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "cloud-cache"
+      "bucket_name": "abcdn"
     }
   ],
   "triggers": {
