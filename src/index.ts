@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import {
+  setGeoData,
   setRegionData,
   setRegionsList,
   setStateData,
@@ -35,13 +36,14 @@ export default {
     }
   },
 
-  async queue(batch, _env, _ctx) {
+  async queue(batch, env, _ctx) {
     for (const message of batch.messages) {
       const { key, value } = JSON.parse(message.body as string);
 
       switch (key) {
         case 'uf':
-          console.log('uf', key, value);
+          console.log('uf', value);
+          await setGeoData(env, 'ufs', value);
           break;
       }
     }
