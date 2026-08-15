@@ -54,6 +54,11 @@ export async function setStateData(env: Cloudflare.Env, key: string) {
   const path = `estados/${key}`;
   const target = `${IBGE}/ufs/${key}.json`;
 
+  await env.QUEUE.send({
+    key: 'uf',
+    value: key,
+  });
+
   return setLocals(env, path, target);
 }
 
@@ -64,12 +69,19 @@ export async function setCitiesList(env: Cloudflare.Env, key: string) {
 
   source.data = source.data.map(mapCity);
 
+  for (const city of source.data)
+    await env.QUEUE.send({
+      key: 'city',
+      value: city.id,
+    });
+
   return putObject(env, target, source);
 }
 
 export async function setCity(env: Cloudflare.Env, key: string) {
-  const target = `${IBGE}/cities/${key}.json`;
-  const source = await getLocals(`municipios/${key}`, target);
+  const path = `municipios/${key}`;
+  const target = `${IBGE}/cidades/${key}.json`;
+  const source = await getLocals(path, target);
 
   source.data = mapCity(source.data);
 
