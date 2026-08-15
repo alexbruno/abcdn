@@ -15,7 +15,7 @@
   "triggers": {
     "crons": [
       "*/10 * * * *",
-      "0 4 ** mon"
+      "0 4 * * mon"
     ],
   },
   "queues": {
