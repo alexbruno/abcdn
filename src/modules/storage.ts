@@ -1,6 +1,9 @@
 import { CacheData } from './types';
 
-export async function getObject(env: Env, path: string): Promise<any> {
+export async function getObject(
+  env: Cloudflare.Env,
+  path: string,
+): Promise<any> {
   console.log('getObject', path);
   const object = await env.BUCKET.get(path);
 
@@ -10,7 +13,7 @@ export async function getObject(env: Env, path: string): Promise<any> {
 }
 
 export async function putObject(
-  env: Env,
+  env: Cloudflare.Env,
   key: string,
   data: any,
 ): Promise<CacheData> {
@@ -20,7 +23,10 @@ export async function putObject(
   return getObject(env, key);
 }
 
-export async function deleteObject(env: Env, path: string): Promise<void> {
+export async function deleteObject(
+  env: Cloudflare.Env,
+  path: string,
+): Promise<void> {
   await env.BUCKET.delete(path);
 }
 
